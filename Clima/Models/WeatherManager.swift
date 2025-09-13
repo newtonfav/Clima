@@ -37,14 +37,14 @@ struct WeatherManager {
             let session = URLSession(configuration: .default)
 
             // Give the session a task
-            let task = session.dataTask(with: url, completionHandler: handle)
+            let task = session.dataTask(with: url, completionHandler: handleWeatherRequest)
 
             // Start the task
             task.resume()
         }
     }
 
-    func handle(data: Data?, response: URLResponse?, error: Error?) {
+    func handleWeatherRequest(data: Data?, response: URLResponse?, error: Error?) {
         if error != nil {
             print(error!)
             return
