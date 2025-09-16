@@ -4,7 +4,7 @@ struct WeatherManager {
     let weatherUrl =
         "https://api.openweathermap.org/data/3.0/onecall?exclude=minutely,hourly,daily&appid=0ad817eb245fe651cab840fabf7056f1&units=metric"
     let geocodingUrl = "http://api.openweathermap.org/geo/1.0/direct?limit=1"
-    
+
     var longitude = 7.4892974
     var latitude = 9.0643305
 
@@ -18,7 +18,7 @@ struct WeatherManager {
         if let url = URL(string: urlString) {
             let session = URLSession(configuration: .default)
             let task = session.dataTask(with: url) { (data, response, error) in
-                
+
             }
             task.resume()
         }
@@ -37,22 +37,28 @@ struct WeatherManager {
             let session = URLSession(configuration: .default)
 
             // Give the session a task
-            let task = session.dataTask(with: url, completionHandler: handleWeatherRequest)
+            let task = session.dataTask(with: url) { (data, response, error) in
+                if error != nil {
+                    print(error!)
+                    return
+                }
 
+                if let safeData = data {
+                    parseJSON(weatherData: safeData)
+                }
+            }
             // Start the task
             task.resume()
         }
     }
-
-    func handleWeatherRequest(data: Data?, response: URLResponse?, error: Error?) {
-        if error != nil {
-            print(error!)
-            return
-        }
-
-        if let safeData = data {
-            let dataString = String(data: safeData, encoding: .utf8)
-            print(dataString ?? "No data")
+    
+    func parseJSON(weatherData: Data) {
+        let decoder = JSONDecoder()
+        
+        do {
+            try decoder.decode(WeatherData.self, from: weatherData)
+        } catch {
+            print(error)
         }
     }
 }
