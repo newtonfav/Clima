@@ -3,30 +3,54 @@ import Foundation
 struct WeatherManager {
     let weatherUrl =
         "https://api.openweathermap.org/data/3.0/onecall?exclude=minutely,hourly,daily&appid=0ad817eb245fe651cab840fabf7056f1&units=metric"
-    let geocodingUrl = "http://api.openweathermap.org/geo/1.0/direct?limit=1"
-
-    var longitude = 7.4892974
-    var latitude = 9.0643305
+    let geocodingUrl = "https://api.openweathermap.org/geo/1.0/direct?&appid=0ad817eb245fe651cab840fabf7056f1&limit=1"
 
     func fetchCityCordinates(_ cityName: String) {
         let urlString = "\(geocodingUrl)&q=\(cityName)"
-
-        print(urlString)
+        performGeocodingRequest(urlString: urlString)
     }
 
     func performGeocodingRequest(urlString: String) {
         if let url = URL(string: urlString) {
             let session = URLSession(configuration: .default)
             let task = session.dataTask(with: url) { (data, response, error) in
+                if error != nil {
+                    print(error!)
+                    return
+                }
 
+                if let safeData = data {
+                    let coordinates = parseGeocodingJSON(
+                        geocodingData: safeData
+                    )
+                    
+                    fetchWeather(
+                        longitude: coordinates?.lat ?? 0.0,
+                        latitude: coordinates?.lon ?? 0.0
+                    )
+                }
             }
             task.resume()
         }
     }
 
-    func fetchWeather(_ cityName: String) {
-        let urlString = "\(weatherUrl)&lat=\(latitude)&lon=\(longitude)"
+    func parseGeocodingJSON(geocodingData: Data) -> GeocodingData? {
+        let decoder = JSONDecoder()
 
+        do {
+            let decodedData = try decoder.decode(
+                [GeocodingData].self,
+                from: geocodingData
+            )
+            return decodedData[0]
+        } catch {
+            print(error)
+            return nil
+        }
+    }
+
+    func fetchWeather(longitude: Double, latitude: Double) {
+        let urlString = "\(weatherUrl)&lat=\(latitude)&lon=\(longitude)"
         performWeatherRequest(urlString: urlString)
     }
 
@@ -51,12 +75,16 @@ struct WeatherManager {
             task.resume()
         }
     }
-    
+
     func parseJSON(weatherData: Data) {
         let decoder = JSONDecoder()
-        
+
         do {
-            try decoder.decode(WeatherData.self, from: weatherData)
+            let decodedData = try decoder.decode(
+                WeatherData.self,
+                from: weatherData
+            )
+            print(decodedData.current.weather[0].description)
         } catch {
             print(error)
         }

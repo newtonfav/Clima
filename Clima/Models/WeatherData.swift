@@ -1,3 +1,23 @@
 struct WeatherData: Decodable {
+    let timezone: String
+    let current: CurrentWeatherData
+}
+
+struct CurrentWeatherData: Decodable {
+    let temp: Double
+    let feels_like: Double
+    let weather: [WeatherInfo]
+}
+
+struct WeatherInfo: Decodable {
+    let main: String
+    let description: String
+}
+
+struct GeocodingData: Decodable {
     let name: String
+    let lat: Double
+    let lon: Double
+    let country: String
+    let state: String
 }
