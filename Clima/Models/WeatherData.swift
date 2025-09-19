@@ -10,6 +10,7 @@ struct CurrentWeatherData: Decodable {
 }
 
 struct WeatherInfo: Decodable {
+    let id: Int
     let main: String
     let description: String
 }
