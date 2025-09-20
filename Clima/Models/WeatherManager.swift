@@ -1,22 +1,30 @@
 import Foundation
 
+protocol WeatherManagerDelegate {
+    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel)
+    func didFailWithError(error: Error)
+}
+
 struct WeatherManager {
     let weatherUrl =
         "https://api.openweathermap.org/data/3.0/onecall?exclude=minutely,hourly,daily&appid=0ad817eb245fe651cab840fabf7056f1&units=metric"
     let geocodingUrl =
         "https://api.openweathermap.org/geo/1.0/direct?&appid=0ad817eb245fe651cab840fabf7056f1&limit=1"
-
+    
+    var delegate: WeatherManagerDelegate?
+    
+    
     func fetchCityCordinates(_ cityName: String) {
         let urlString = "\(geocodingUrl)&q=\(cityName)"
-        performGeocodingRequest(urlString: urlString)
+        performGeocodingRequest(with: urlString)
     }
 
-    func performGeocodingRequest(urlString: String) {
+    func performGeocodingRequest(with urlString: String) {
         if let url = URL(string: urlString) {
             let session = URLSession(configuration: .default)
             let task = session.dataTask(with: url) { (data, response, error) in
                 if error != nil {
-                    print(error!)
+                    self.delegate?.didFailWithError(error: error!)
                     return
                 }
 
@@ -45,17 +53,17 @@ struct WeatherManager {
             )
             return decodedData[0]
         } catch {
-            print(error)
+            delegate?.didFailWithError(error: error)
             return nil
         }
     }
 
     func fetchWeather(longitude: Double, latitude: Double) {
         let urlString = "\(weatherUrl)&lat=\(latitude)&lon=\(longitude)"
-        performWeatherRequest(urlString: urlString)
+        performWeatherRequest(with: urlString)
     }
 
-    func performWeatherRequest(urlString: String) {
+    func performWeatherRequest(with urlString: String) {
         // Create URL
         if let url = URL(string: urlString) {
             // Create URLSession
@@ -64,12 +72,14 @@ struct WeatherManager {
             // Give the session a task
             let task = session.dataTask(with: url) { (data, response, error) in
                 if error != nil {
-                    print(error!)
+                    self.delegate?.didFailWithError(error: error!)
                     return
                 }
 
                 if let safeData = data {
-                    parseJSON(weatherData: safeData)
+                    if let weather = parseWeatherJSON(weatherData: safeData) {
+                        delegate?.didUpdateWeather(self, weather: weather)
+                    }
                 }
             }
             // Start the task
@@ -77,7 +87,7 @@ struct WeatherManager {
         }
     }
 
-    func parseJSON(weatherData: Data) {
+    func parseWeatherJSON(weatherData: Data) -> WeatherModel? {
         let decoder = JSONDecoder()
 
         do {
@@ -85,35 +95,19 @@ struct WeatherManager {
                 WeatherData.self,
                 from: weatherData
             )
-            print(decodedData.current.weather[0].description)
-            let weatherId = decodedData.current.weather[0].id
-            let conditionName = getWeatherConditionName(weatherId)
-            print(weatherId)
-            print(conditionName)
+        
+            let id = decodedData.current.weather[0].id
+            let temp = decodedData.current.temp
+            let timezone = decodedData.timezone
+            let description = decodedData.current.weather[0].description
+            
+            let weather = WeatherModel(conditionId: id, timezone: timezone, temperature: temp, weatherDescription: description)
+            return weather
         } catch {
-            print(error)
+            delegate?.didFailWithError(error: error)
+            return nil
         }
     }
 
-    func getWeatherConditionName(_ weatherId: Int) -> String {
-        switch weatherId {
-        case 200...232:
-            return "cloud.bolt"
-        case 300...321:
-            return "cloud.drizzle"
-        case 500...531:
-            return "cloud.rain"
-        case 600...622:
-            return "cloud.snow"
-        case 701...781:
-            return "cloud.fog"
-        case 800:
-            return "sun.max"
-        case 801...804:
-            return "cloud.bolt"
-        default:
-            return "cloud"
-        }
-
-    }
+    
 }
