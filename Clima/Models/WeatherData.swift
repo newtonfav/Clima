@@ -22,3 +22,9 @@ struct GeocodingData: Decodable {
     let country: String
     let state: String
 }
+
+struct ReverseGeocodingData: Decodable {
+    let name: String
+    let state: String
+    let country: String
+}

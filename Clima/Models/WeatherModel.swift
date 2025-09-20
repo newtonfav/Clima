@@ -1,8 +1,21 @@
 struct WeatherModel {
+    let cityName: String
+    let stateName: String
+    let countryName: String
     let conditionId: Int
     let timezone: String
     let temperature: Double
     let weatherDescription: String
+    
+    init(weatherData: WeatherData, cityData: ReverseGeocodingData ) {
+        self.cityName = cityData.name
+        self.stateName = cityData.state
+        self.countryName = cityData.country
+        self.conditionId = weatherData.current.weather[0].id
+        self.timezone = weatherData.timezone
+        self.temperature = weatherData.current.temp
+        self.weatherDescription = weatherData.current.weather[0].description
+    }
     
     var temperatureString: String {
         return String(format: "%.1f", temperature)
