@@ -38,11 +38,10 @@ extension WeatherManager {
     }
 }
 
-//MARK: - FetchCityName
+//MARK: - FetchCityData
 extension WeatherManager {
     func fetchCityData(latitude: Double, longitude: Double) async throws -> ReverseGeocodingData {
         let urlString = "\(reverseGeocodingUrl)&lat=\(latitude)&lon=\(longitude)"
-        print(urlString)
         
         guard let url = URL(string: urlString) else {
             throw URLError(.badURL)
@@ -72,8 +71,6 @@ extension WeatherManager {
     
 
     func performWeatherRequest(with urlString: String, data cityData: ReverseGeocodingData) {
-        
-        print("newton")
         // Create URL
         if let url = URL(string: urlString) {
             // Create URLSession
