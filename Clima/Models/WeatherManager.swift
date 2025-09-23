@@ -5,13 +5,22 @@ protocol WeatherManagerDelegate {
     func didFailWithError(error: Error)
 }
 
+
+
 struct WeatherManager {
-    let weatherUrl =
-        "https://api.openweathermap.org/data/3.0/onecall?exclude=minutely,hourly,daily&appid=0ad817eb245fe651cab840fabf7056f1&units=metric"
-    let geocodingUrl =
-        "https://api.openweathermap.org/geo/1.0/direct?&appid=0ad817eb245fe651cab840fabf7056f1&limit=1"
-    let reverseGeocodingUrl = "https://api.openweathermap.org/geo/1.0/reverse?appid=0ad817eb245fe651cab840fabf7056f1&limit=1"
+    let apiKey: String
+    let weatherUrl: String
+    let geocodingUrl: String
+    let reverseGeocodingUrl: String
     var delegate: WeatherManagerDelegate?
+
+    init() {
+        let key = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String ?? ""
+        apiKey = key
+        weatherUrl = "https://api.openweathermap.org/data/3.0/onecall?exclude=minutely,hourly,daily&appid=\(key)&units=metric"
+        geocodingUrl = "https://api.openweathermap.org/geo/1.0/direct?&appid=\(key)&limit=1"
+        reverseGeocodingUrl = "https://api.openweathermap.org/geo/1.0/reverse?appid=\(key)&limit=1"
+    }
 }
 
 
